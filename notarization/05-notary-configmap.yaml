@@ -1,0 +1,15 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: notary-configmap
+  namespace: clearing-house
+data:
+  European_Commission_API: "https://ec.europa.eu/taxation_customs/dds2/eos/validation/services/validation"
+  GLEIF_API: "https://api.gleif.org/api/v1/lei-records/"
+  VAT_API: "http://ec.europa.eu/taxation_customs/vies/services/checkVatService"
+  OpenCorporate_API: "https://api.opencorporates.com/"
+  xmlns_eori: "http://eori.ws.eos.dds.s/"
+  xmlns_urn: "urn:ec.europa.eu:taxud:vies:services:checkVat:types"
+  BASE_URL: "https://registration.${PUBLIC_NODE_DOMAIN}"
+---
+

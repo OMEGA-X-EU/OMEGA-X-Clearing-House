@@ -1,0 +1,16 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: registry-mongo
+  namespace: clearing-house
+spec:
+  selector:
+    app: registry-mongo
+  type: ClusterIP
+  ports:
+  - name: registry-mongo
+    protocol: TCP
+    port: 27017
+    targetPort: 27017
+---
+

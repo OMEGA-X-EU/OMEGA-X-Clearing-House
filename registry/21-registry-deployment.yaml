@@ -1,0 +1,60 @@
+# https://kubernetes.io/docs/concepts/workloads/controllers/deployment/
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: registry
+  namespace: clearing-house
+  labels:
+    app: registry
+spec:
+  selector:
+    matchLabels:
+      app: registry
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: registry
+    spec:
+      containers:
+      - name: registry
+        image: registry.gitlab.com/gaia-x/lab/compliance/gx-registry:${IMAGETAG_REGISTRY}
+        imagePullPolicy: Always
+        livenessProbe:
+          httpGet:
+            path: /
+            port: 3000
+          periodSeconds: 15
+          initialDelaySeconds: 15
+          failureThreshold: 10
+          successThreshold: 1
+        readinessProbe:
+          httpGet:
+            path: /
+            port: 3000
+          periodSeconds: 15
+          initialDelaySeconds: 15
+          failureThreshold: 10
+          successThreshold: 1
+        envFrom:
+        - configMapRef:
+            name: registry-configmap
+        - secretRef:
+            name: registry-creds
+        env:
+        - name: DB_USERNAME
+          valueFrom:
+            secretKeyRef:
+              name: registry-mongo-creds
+              key: username
+        - name: DB_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: registry-mongo-creds
+              key: password
+        ports:
+        - containerPort: 3000
+          name: registry-http
+      restartPolicy: Always
+---
+

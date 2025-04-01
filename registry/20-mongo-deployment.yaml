@@ -1,0 +1,55 @@
+# https://kubernetes.io/docs/concepts/workloads/controllers/deployment/
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name:  registry-mongo
+  namespace: clearing-house
+  labels:
+    app:  registry-mongo
+spec:
+  selector:
+    matchLabels:
+      app: registry-mongo
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app:  registry-mongo
+    spec:
+      containers:
+      - name:  registry-mongo
+        image:  mongo:${IMAGETAG_REGISTRY_MONGO}
+        imagePullPolicy: IfNotPresent
+        env:
+        - name: MONGO_INITDB_ROOT_USERNAME
+          valueFrom:
+            secretKeyRef:
+              name: registry-mongo-creds
+              key: username
+        - name: MONGO_INITDB_ROOT_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: registry-mongo-creds
+              key: password
+        ports:
+        - containerPort:  27017
+          name:  registry-mongo
+          protocol: TCP
+        volumeMounts:
+        - name: registry-mongo-data-pvc
+          mountPath: /data/db
+        - name: registry-mongo-init
+          mountPath: /docker-entrypoint-initdb.d
+      volumes:
+        - name: registry-mongo-data-pvc
+          persistentVolumeClaim:
+            claimName: registry-mongo-data-pvc
+        - name: registry-mongo-init
+          configMap:
+            name: registry-mongo-init
+            items:
+              - key: init.js
+                path: init.js
+      restartPolicy: Always
+---
+

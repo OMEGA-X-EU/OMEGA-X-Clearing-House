@@ -1,0 +1,50 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: notary-init
+  namespace: clearing-house
+data:
+  init.js: |
+    const fs = require('fs')
+    const forge = require('node-forge')
+
+    const certPem = Buffer.from('${NOTARY_X509}', 'base64').toString('utf-8')
+    const certRoot = Buffer.from('${CA_ROOT_CERT}', 'base64').toString('utf-8')
+    const certChain = certPem + certRoot
+
+    const domain = 'registration.' + '${PUBLIC_NODE_DOMAIN}'
+    const url = 'https://' + domain
+
+    const certificate = forge.pki.certificateFromPem(certPem)
+
+    const modulus = forge.util.encode64(forge.util.hexToBytes(certificate.publicKey.n.toString(16)))
+    const exponent = forge.util.encode64(forge.util.hexToBytes(certificate.publicKey.e.toString(16)))
+
+    const jwk = {
+      kty: 'RSA',
+      n: modulus,
+      e: exponent,
+      alg: 'RS256',
+      x5u: url + '/.well-known/x509CertificateChain.pem'
+    }
+
+    const did_json = {
+        '@context': [
+            'https://www.w3.org/2018/credentials/v1',
+            'https://w3id.org/security/suites/jws-2020/v1'
+        ],
+        id: 'did:web:' + domain,
+        verificationMethod: [
+            {
+                '@context': 'https://w3id.org/security/suites/jws-2020/v1',
+                id: 'did:web:' + domain + '#X509-JWK2020',
+                type: 'JsonWebKey2020',
+                publicKeyJwk: jwk
+            }
+        ]
+    }
+
+    fs.writeFile('did.json', JSON.stringify(did_json, null, 2), (err) => console.log(err)) 
+    fs.writeFile('x509CertificateChain.pem', certChain, (err) => console.log(err)) 
+---
+

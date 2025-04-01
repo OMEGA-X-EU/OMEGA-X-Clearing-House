@@ -1,0 +1,17 @@
+# https://kubernetes.io/docs/concepts/services-networking/service/
+apiVersion: v1
+kind: Service
+metadata:
+  name: registry
+  namespace: clearing-house
+spec:
+  selector:
+    app: registry
+  type: ClusterIP
+  ports:
+  - name: registry
+    protocol: TCP
+    port: 3000
+    targetPort: 3000
+---
+

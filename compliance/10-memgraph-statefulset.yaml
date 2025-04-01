@@ -1,0 +1,47 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: compliance-memgraph
+  namespace: clearing-house
+spec:
+  serviceName: compliance-memgraph-service
+  replicas: 1
+  selector:
+    matchLabels:
+      app: compliance-memgraph
+  template:
+    metadata:
+      labels:
+        app: compliance-memgraph
+    spec:
+      containers:
+      - name: compliance-memgraph
+        image: memgraph/memgraph:${IMAGETAG_MEMGRAPH}
+        args: [ "--also-log-to-stderr=true" ]
+        imagePullPolicy: Always
+        securityContext:
+          runAsUser: 0
+        ports:
+        - containerPort: 7687
+        volumeMounts:
+        - name: compliance-memgraph-lib-storage
+          mountPath: /var/lib/memgraph
+        - name: compliance-memgraph-log-storage
+          mountPath: /var/log/memgraph
+  volumeClaimTemplates:
+  - metadata:
+      name: compliance-memgraph-lib-storage
+    spec:
+      accessModes: [ "ReadWriteOnce" ]
+      resources:
+        requests:
+          storage: 500Mi
+  - metadata:
+      name: compliance-memgraph-log-storage
+    spec:
+      accessModes: [ "ReadWriteOnce" ]
+      resources:
+        requests:
+          storage: 500Mi
+---
+

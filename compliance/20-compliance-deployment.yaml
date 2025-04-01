@@ -1,0 +1,78 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: compliance
+  namespace: clearing-house
+  labels:
+    app: compliance
+spec:
+  selector:
+    matchLabels:
+      app: compliance
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: compliance
+    spec:
+      containers:
+      - name: compliance
+        image: registry.gitlab.com/gaia-x/lab/compliance/gx-compliance:${IMAGETAG_COMPLIANCE}
+        imagePullPolicy: Always
+        livenessProbe:
+          httpGet:
+            path: /
+            port: 3000
+          periodSeconds: 15
+          initialDelaySeconds: 15
+          failureThreshold: 10
+          successThreshold: 1
+        readinessProbe:
+          httpGet:
+            path: /
+            port: 3000
+          periodSeconds: 15
+          initialDelaySeconds: 15
+          failureThreshold: 10
+          successThreshold: 1
+        envFrom:
+        - configMapRef:
+            name: compliance-configmap
+        env:
+        - name: privateKey
+          valueFrom:
+            secretKeyRef:
+              name: compliance-secrets
+              key: private-key
+        - name: X509_CERTIFICATE
+          valueFrom:
+            secretKeyRef:
+              name: compliance-secrets
+              key: certificate
+        volumeMounts:
+          - name: shared-folder
+            mountPath: /usr/src/app/static/.well-known
+        ports:
+        - containerPort: 3000
+          name: compliance-http
+      initContainers:
+      - name: prepare-certificate-and-did
+        image: node:14
+        volumeMounts:
+        - name: compliance-init
+          mountPath: /scripts
+        - name: shared-folder
+          mountPath: /shared
+        command: ["/bin/bash","-c","npm install node-forge && cp /scripts/init.js /shared && cd shared && node init.js && rm init.js"]
+      volumes:
+      - name: shared-folder
+        emptyDir: {}        
+      - name: compliance-init
+        configMap:
+          name: compliance-init
+          items:
+            - key: init.js
+              path: init.js
+      restartPolicy: Always
+---
+

@@ -1,0 +1,7 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: clearing-house
+  labels:
+    name: clearing-house
+---

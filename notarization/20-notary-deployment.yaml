@@ -1,0 +1,60 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: notary
+  namespace: clearing-house
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: notary
+  template:
+    metadata:
+      labels:
+        app: notary
+    spec:
+      containers:
+      - name: notary
+        image: registry.gitlab.com/gaia-x/lab/compliance/gaia-x-notary-registrationnumber:${IMAGETAG_NOTARY}
+        imagePullPolicy: Always
+        ports:
+        - containerPort: 3000
+          name: notary-http
+        envFrom:
+        - configMapRef:
+            name: notary-configmap
+        env:
+          - name: PRIVATE_KEY    
+            valueFrom:
+              secretKeyRef:
+                name: notary-secrets
+                key: privateKey
+          - name: NOTARY_X509    
+            valueFrom:
+              secretKeyRef:
+                name: notary-secrets
+                key: x509
+        volumeMounts:
+          - name: shared-folder
+            mountPath: /usr/src/app/static/.well-known
+      initContainers:
+      - name: prepare-certificate-and-did
+        image: node:14
+        volumeMounts:
+        - name: notary-init
+          mountPath: /scripts
+        - name: shared-folder
+          mountPath: /shared
+        command: ["/bin/bash","-c","npm install node-forge && cp /scripts/init.js /shared && cd shared && node init.js && rm init.js"]
+      volumes:
+      - name: shared-folder
+        emptyDir: {}        
+      - name: notary-init
+        configMap:
+          name: notary-init
+          items:
+            - key: init.js
+              path: init.js
+      restartPolicy: Always
+--- 
+

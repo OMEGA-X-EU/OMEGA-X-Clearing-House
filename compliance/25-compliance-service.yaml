@@ -1,0 +1,16 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: compliance-service
+  namespace: clearing-house
+spec:
+  selector:
+    app: compliance
+  type: ClusterIP
+  ports:
+  - name: compliance
+    protocol: TCP
+    port: 3000
+    targetPort: 3000
+---
+

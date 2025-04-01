@@ -1,0 +1,16 @@
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: registry-mongo-data-pvc
+  namespace: clearing-house
+  labels:
+    app: registry-mongo-data-pvc
+spec:
+  storageClassName: nfs-storageclass
+  accessModes:
+  - ReadWriteOnce
+  resources:
+    requests:
+      storage: 2Gi
+---
+

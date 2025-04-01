@@ -1,0 +1,21 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  annotations:
+    traefik.ingress.kubernetes.io/router.entrypoints: web, websecure
+    traefik.ingress.kubernetes.io/router.tls.certresolver: default
+  name: notary-ingress
+  namespace: clearing-house
+spec:
+  rules:
+  - host: registration.${PUBLIC_NODE_DOMAIN}
+    http:
+      paths:
+      - backend:
+          service:
+            name: notary
+            port:
+              number: 3000
+        path: /
+        pathType: Prefix
+---
